@@ -2,6 +2,7 @@ package ru.usikov.crudtesttask.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.usikov.crudtesttask.api.dto.HouseDto;
 import ru.usikov.crudtesttask.entities.House;
 import ru.usikov.crudtesttask.entities.User;
@@ -24,7 +25,7 @@ public class HouseService {
     private final HouseRepository houseRepository;
     private final UserServiceHelper userServiceHelper;
 
-
+    @Transactional(readOnly = true)
     public List<HouseDto> getAllHouses() {
         return houseRepository.findAll().stream()
                 .map(house -> HouseDto.builder()
@@ -33,9 +34,9 @@ public class HouseService {
                         .ownerUserId(house.getOwnerUser().getId())
                         .build())
                 .toList();
-
     }
 
+    @Transactional(readOnly = true)
     public HouseDto getHouseById(final UUID id) {
         final House house = getById(id);
         return HouseDto.builder()
@@ -45,6 +46,7 @@ public class HouseService {
                 .build();
     }
 
+    @Transactional
     public UUID saveOrUpdate(final HouseDto houseDto) {
         if (isNull(houseDto.getOwnerUserId())) {
             throw new RuntimeException(OWNER_USER_NOT_FOUND);
@@ -57,10 +59,12 @@ public class HouseService {
                 .getId();
     }
 
+    @Transactional
     public void deleteHouseById(final UUID id) {
         houseRepository.delete(getById(id));
     }
 
+    @Transactional
     public House getById(final UUID id) {
         return houseRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(HOUSE_NOT_FOUND));

@@ -2,6 +2,7 @@ package ru.usikov.crudtesttask.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.usikov.crudtesttask.api.dto.AddResidentsRequestDto;
 import ru.usikov.crudtesttask.api.dto.UserDto;
 import ru.usikov.crudtesttask.entities.User;
@@ -20,6 +21,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final HouseRepository houseRepository;
 
+    @Transactional(readOnly = true)
     public List<UserDto> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(user -> UserDto.builder()
@@ -31,6 +33,7 @@ public class UserService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public UserDto getUserById(final UUID id) {
         final User user = userServiceHelper.getById(id);
         return UserDto.builder()
@@ -41,6 +44,7 @@ public class UserService {
                 .build();
     }
 
+    @Transactional
     public UUID saveOrUpdate(final UserDto userDto) {
         return userRepository.save(User.builder()
                         .id(userDto.getId())
@@ -51,11 +55,12 @@ public class UserService {
                 .getId();
     }
 
+    @Transactional
     public void deleteUserById(final UUID id) {
         userRepository.delete(userServiceHelper.getById(id));
     }
 
-
+    @Transactional
     public void addResidentsToHouse(final AddResidentsRequestDto addResidentsRequestDto) {
         final User ownerUser = userServiceHelper.getById(addResidentsRequestDto.getOwnerUserId());
         houseRepository.findByOwnerUserId(ownerUser.getId())
