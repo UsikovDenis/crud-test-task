@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import ru.usikov.crudtesttask.api.dto.AddResidentsRequestDto;
 import ru.usikov.crudtesttask.api.dto.UserDto;
 import ru.usikov.crudtesttask.entities.User;
+import ru.usikov.crudtesttask.errors.NotFoundException;
+import ru.usikov.crudtesttask.repositories.HouseRepository;
 import ru.usikov.crudtesttask.repositories.UserRepository;
 
 import java.util.List;
@@ -15,8 +17,8 @@ import java.util.UUID;
 public class UserService {
 
     private final UserServiceHelper userServiceHelper;
-    private final HouseService houseService;
     private final UserRepository userRepository;
+    private final HouseRepository houseRepository;
 
     public List<UserDto> getAllUsers() {
         return userRepository.findAll().stream()
@@ -56,8 +58,11 @@ public class UserService {
 
     public void addResidentsToHouse(final AddResidentsRequestDto addResidentsRequestDto) {
         final User ownerUser = userServiceHelper.getById(addResidentsRequestDto.getOwnerUserId());
-        ownerUser.getHouse().getResidents()
-                .addAll(userRepository.findAllByIdIn(addResidentsRequestDto.getResidentIds()));
-        userRepository.save(ownerUser);
+        houseRepository.findByOwnerUserId(ownerUser.getId())
+                .ifPresent(house -> {
+                    house.getResidents()
+                            .addAll(userRepository.findAllByIdIn(addResidentsRequestDto.getResidentIds()));
+                    houseRepository.save(house);
+                });
     }
 }
